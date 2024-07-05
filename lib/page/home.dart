@@ -1,6 +1,7 @@
-import 'package:colorpick/page/colordetect.dart';
+import 'package:colorpick/page/camera_view.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'colordetect.dart'; // Adjust the import path as needed
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -10,19 +11,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  XFile? imagefromgallery;
   ImagePicker picker = ImagePicker();
-  XFile? imagefromcamera;
+  XFile? imagefile;
 
-  Future getimageGallery() async {
+  Future<void> getimage(bool iscamera) async {
     try {
-      XFile? fileimagefromgallery =
-          await picker.pickImage(source: ImageSource.gallery);
+      XFile? fileimagefromdevice = await picker.pickImage(
+          source: iscamera ? ImageSource.camera : ImageSource.gallery);
 
-      if (imagefromgallery == null) {
+      if (fileimagefromdevice != null) {
         setState(() {
-          imagefromgallery = fileimagefromgallery;
-          debugPrint("$imagefromgallery");
+          imagefile = fileimagefromdevice;
+          debugPrint("$fileimagefromdevice");
         });
       }
     } catch (error) {
@@ -30,44 +30,15 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future getimageCamera() async {
-    try {
-      XFile? fileimagefromcamera =
-          await picker.pickImage(source: ImageSource.camera);
-
-      if (imagefromcamera == null) {
-        setState(() {
-          imagefromcamera = fileimagefromcamera;
-          debugPrint("$imagefromcamera");
-        });
-      }
-    } catch (error) {
-      debugPrint("No image Selected $error");
+  Future<void> handlegetimage(bool iscamera) async {
+    await getimage(iscamera);
+    if (imagefile != null && mounted) {
+      Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) =>
+                  ColorDetectresult(imagepicked: imagefile!)));
     }
-  }
-
-  void handlegetimagefromcamera() {
-    getimageCamera().then((value) {
-      if (imagefromcamera != null) {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    ColorDetectresult(imagepicked: imagefromcamera!)));
-      }
-    });
-  }
-
-  void handlegetimagefromgallery() {
-    getimageGallery().then((value) {
-      if (imagefromgallery != null) {
-        Navigator.push(
-            context,
-            MaterialPageRoute(
-                builder: (context) =>
-                    ColorDetectresult(imagepicked: imagefromgallery!)));
-      }
-    });
   }
 
   @override
@@ -87,7 +58,7 @@ class _HomePageState extends State<HomePage> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8))),
                   onPressed: () {
-                    handlegetimagefromcamera();
+                    handlegetimage(true);
                   },
                   child: const Text(
                     "Take a Photo",
@@ -106,10 +77,32 @@ class _HomePageState extends State<HomePage> {
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8))),
                   onPressed: () {
-                    handlegetimagefromgallery();
+                    handlegetimage(false);
                   },
                   child: const Text(
                     "Upload Image",
+                    style: TextStyle(color: Colors.white),
+                  )),
+            ),
+            const SizedBox(
+              height: 30,
+            ),
+            SizedBox(
+              width: 240,
+              height: 50,
+              child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.lightBlueAccent,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8))),
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const CameraDetectionPage()));
+                  },
+                  child: const Text(
+                    "Object Detect",
                     style: TextStyle(color: Colors.white),
                   )),
             )

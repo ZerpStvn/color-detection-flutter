@@ -5,6 +5,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'dart:io';
 
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 class ColorDetectresult extends StatefulWidget {
   final XFile imagepicked;
 
@@ -20,11 +22,25 @@ class _ColorDetectresultState extends State<ColorDetectresult> {
   String rgbcolor = "";
   Color? dominantColor;
   Color? centerColor;
+  bool islaoding = false;
 
   @override
   void initState() {
     super.initState();
-    _getColors();
+    loadingDelay();
+  }
+
+  void loadingDelay() {
+    setState(() {
+      islaoding = true;
+    });
+
+    Future.delayed(const Duration(seconds: 5)).then((value) {
+      _getColors();
+      setState(() {
+        islaoding = false;
+      });
+    });
   }
 
   Future<void> _getColors() async {
@@ -104,87 +120,102 @@ class _ColorDetectresultState extends State<ColorDetectresult> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Color Detection Result'),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            if (widget.imagepicked.path.isNotEmpty)
-              SizedBox(
-                width: MediaQuery.of(context).size.width,
-                height: 350,
-                child: Image.file(
-                  fit: BoxFit.cover,
-                  File(widget.imagepicked.path),
-                ),
-              ),
-            if (_colors.isNotEmpty)
-              const SizedBox(
-                height: 20,
-              ),
-            const Center(
-              child: Text(
-                "Color Detected from the Image",
-                style: TextStyle(fontSize: 18),
-              ),
+    return islaoding == false
+        ? Scaffold(
+            appBar: AppBar(
+              title: const Text('Color Detection Result'),
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: _colors
-                  .map((color) => GestureDetector(
-                        onTap: () {
-                          _setColorValues(color);
-                        },
-                        child: Container(
+            body: SingleChildScrollView(
+              child: Column(
+                children: [
+                  if (widget.imagepicked.path.isNotEmpty)
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      height: 350,
+                      child: Image.file(
+                        fit: BoxFit.cover,
+                        File(widget.imagepicked.path),
+                      ),
+                    ),
+                  if (_colors.isNotEmpty)
+                    const SizedBox(
+                      height: 20,
+                    ),
+                  const Center(
+                    child: Text(
+                      "Color Detected from the Image",
+                      style: TextStyle(fontSize: 18),
+                    ),
+                  ),
+                  const SizedBox(
+                    height: 20,
+                  ),
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: _colors
+                        .map((color) => GestureDetector(
+                              onTap: () {
+                                _setColorValues(color);
+                              },
+                              child: Container(
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                    color: color,
+                                    border: Border.all(
+                                        width: 1, color: Colors.black)),
+                              ),
+                            ))
+                        .toList(),
+                  ),
+                  const SizedBox(height: 20),
+                  if (hexcolor.isNotEmpty && rgbcolor.isNotEmpty)
+                    Column(
+                      children: [
+                        Text(
+                          'Hex: $hexcolor',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        Text(
+                          'RGB: $rgbcolor',
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      ],
+                    ),
+                  if (dominantColor != null && centerColor != null)
+                    Column(
+                      children: [
+                        const Text(
+                          'Dominant Color:',
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Container(
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
-                              color: color,
+                              color: dominantColor,
                               border:
                                   Border.all(width: 1, color: Colors.black)),
                         ),
-                      ))
-                  .toList(),
+                      ],
+                    ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            if (hexcolor.isNotEmpty && rgbcolor.isNotEmpty)
-              Column(
-                children: [
-                  Text(
-                    'Hex: $hexcolor',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  Text(
-                    'RGB: $rgbcolor',
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ],
-              ),
-            if (dominantColor != null && centerColor != null)
-              Column(
-                children: [
-                  const Text(
-                    'Dominant Color:',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                        color: dominantColor,
-                        border: Border.all(width: 1, color: Colors.black)),
-                  ),
-                ],
-              ),
-          ],
-        ),
-      ),
-    );
+          )
+        : Scaffold(
+            body: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Center(
+                  child: LoadingAnimationWidget.inkDrop(
+                      color: Colors.lightBlueAccent, size: 26),
+                )
+              ],
+            ),
+          );
   }
 }

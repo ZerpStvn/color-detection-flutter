@@ -1,3 +1,4 @@
+import 'package:colorpick/page/camera_view.dart';
 import 'package:colorpick/page/home.dart';
 import 'package:flutter/material.dart';
 
